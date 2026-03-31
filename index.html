@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HACCP SISTEMA</title>
+
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+<style>
+body { font-family: Arial; margin:0; background:#eef2f5; }
+.container { max-width:900px; margin:auto; padding:20px; background:white; }
+h1 { text-align:center; }
+nav button { margin:5px; padding:10px; }
+section { display:none; }
+.active { display:block; }
+input, select { width:100%; padding:8px; margin:5px 0; }
+.warn { color:red; font-weight:bold; }
+.ok { color:green; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>SISTEMA HACCP</h1>
+
+<div id="login">
+<input type="password" id="pin" placeholder="PIN">
+<button id="loginBtn">Accedi</button>
+</div>
+
+<div id="app" style="display:none;">
+
+<nav>
+<button onclick="show('dashboard')">Dashboard</button>
+<button onclick="show('temp')">Temperature</button>
+<button onclick="show('pulizie')">Pulizie</button>
+<button onclick="show('ricevimento')">Ricevimento</button>
+<button onclick="show('audit')">Audit</button>
+</nav>
+
+<section id="dashboard" class="active">
+<h2>Stato sistema</h2>
+<div id="stato"></div>
+</section>
+
+<!-- TEMPERATURE -->
+<section id="temp">
+<h2>Temperature</h2>
+
+<select id="frigo">
+<option>Frigo bar</option>
+<option>Vetrina frollatura</option>
+<option>Frigo 1</option>
+<option>Frigo 2</option>
+<option>Congelatore</option>
+</select>
+
+<input type="number" id="valore" placeholder="Temperatura">
+<button onclick="addTemp()">Salva</button>
+
+<div id="listaTemp"></div>
+</section>
+
+<!-- PULIZIE -->
+<section id="pulizie">
+<h2>Pulizie</h2>
+
+<select id="ambiente">
+<option>Cucina separata</option>
+<option>Sala</option>
+<option>Zona lavaggio</option>
+<option>Magazzino</option>
+<option>Bagni</option>
+</select>
+
+<input id="attrezzatura" placeholder="Attrezzatura">
+<input id="pulizia" placeholder="Operazione">
+
+<button onclick="addPulizia()">Salva</button>
+
+<div id="listaPulizia"></div>
+</section>
+
+<!-- RICEVIMENTO -->
+<section id="ricevimento">
+<h2>Ricevimento Merci</h2>
+
+<input id="fornitore" placeholder="Fornitore">
+<input id="prodotto" placeholder="Prodotto">
+<input id="lotto" placeholder="Lotto">
+
+<button onclick="addRicevimento()">Salva</button>
+
+<div id="listaRicevimento"></div>
+</section>
+
+<!-- AUDIT -->
+<section id="audit">
+<h2>Audit</h2>
+
+<input type="date" id="dataAudit">
+<input id="firma" placeholder="Firma operatore">
+
+<button onclick="addAudit()">Registra</button>
+
+<div id="listaAudit"></div>
+</section>
+
+</div>
+
+</div>
+
+<script>
+
+const PIN = "5777";
+
+let dati = JSON.parse(localStorage.getItem("dati")) || [];
+
+/* LOGIN */
+document.getElementById("loginBtn").addEventListener("click", function(){
+ let pin = document.getElementById("pin").value;
+ if(pin === PIN){
+   document.getElementById("login").style.display = "none";
+   document.getElementById("app").style.display = "block";
+   aggiorna();
+ } else alert("PIN errato");
+});
+
+function show(id){
+ document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
+}
+
+function save(){
+ localStorage.setItem("dati", JSON.stringify(dati));
+}
+
+/* TEMPERATURE HACCP */
+function addTemp(){
+
+ let frigo = document.getElementById("frigo").value;
+ let val = parseFloat(valore.value);
+
+ let stato = "OK";
+
+ if(frigo !== "Congelatore" && (val < 0 || val > 4)) stato = "NON CONFORME";
+ if(frigo === "Congelatore" && val > -18) stato = "NON CONFORME";
+
+ dati.push({
+   tipo:"temp",
+   frigo:frigo,
+   valore:val,
+   stato:stato
+ });
+
+ save();
+ aggiorna();
+}
+
+/* PULIZIE */
+function addPulizia(){
+ dati.push({
+   tipo:"pulizia",
+   ambiente:ambiente.value,
+   attrezzatura:attrezzatura.value,
+   operazione:pulizia.value
+ });
+ save();
+ aggiorna();
+}
+
+/* RICEVIMENTO */
+function addRicevimento(){
+ dati.push({
+   tipo:"ricevimento",
+   fornitore:fornitore.value,
+   prodotto:prodotto.value,
+   lotto:lotto.value
+ });
+ save();
+ aggiorna();
+}
+
+/* AUDIT */
+function addAudit(){
+ dati.push({
+   tipo:"audit",
+   data:dataAudit.value,
+   firma:firma.value
+ });
+ save();
+ aggiorna();
+}
+
+/* AGGIORNA */
+function aggiorna(){
+
+ let html = "";
+ let errori = 0;
+
+ dati.forEach(d=>{
+
+   if(d.tipo==="temp"){
+     if(d.stato==="NON CONFORME") errori++;
+     html += `<div>${d.frigo} - ${d.valore}°C - ${d.stato}</div>`;
+   }
+
+   if(d.tipo==="pulizia"){
+     html += `<div>${d.ambiente} - ${d.attrezzatura} - ${d.operazione}</div>`;
+   }
+
+   if(d.tipo==="ricevimento"){
+     html += `<div>${d.fornitore} - ${d.prodotto} - Lotto: ${d.lotto}</div>`;
+   }
+
+   if(d.tipo==="audit"){
+     html += `<div>${d.data} - ${d.firma}</div>`;
+   }
+
+ });
+
+ document.getElementById("stato").innerHTML =
+ errori ? "<span class='warn'>NON CONFORME</span>" : "<span class='ok'>CONFORME</span>";
+
+ document.getElementById("listaTemp").innerHTML = html;
+ document.getElementById("listaPulizia").innerHTML = html;
+ document.getElementById("listaRicevimento").innerHTML = html;
+ document.getElementById("listaAudit").innerHTML = html;
+}
+
+</script>
+
+</body>
+</html>
