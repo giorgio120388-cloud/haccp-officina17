@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HACCP Officina 17</title>
+</head>
+<body>
+
+<h1>HACCP Officina 17</h1>
+
+<input id="frigo" placeholder="Frigorifero"><br><br>
+<input id="temp" type="number" placeholder="Temperatura"><br><br>
+
+<button onclick="salva()">Salva</button>
+
+<ul id="lista"></ul>
+
+<script>
+let dati = [];
+
+function salva(){
+    let f = document.getElementById("frigo").value;
+    let t = document.getElementById("temp").value;
+
+    dati.push(f + " - " + t + "°C");
+
+    aggiorna();
+}
+
+function aggiorna(){
+    let lista = document.getElementById("lista");
+    lista.innerHTML = "";
+
+    dati.forEach(d => {
+        lista.innerHTML += "<li>" + d + "</li>";
+    });
+}
+</script>
+
+</body>
+</html>
