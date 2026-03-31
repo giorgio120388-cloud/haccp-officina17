@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HACCP Officina 17</title>
+</head>
+<body>
+
+<h1>HACCP Officina 17</h1>
+
+<input type="text" id="frigo" placeholder="Nome frigo"><br><br>
+<input type="number" id="temp" placeholder="Temperatura"><br><br>
+
+<button onclick="salva()">Salva</button>
+<button onclick="esportaPDF()">Scarica PDF</button>
+
+<ul id="lista"></ul>
+
+<script>
+let dati = JSON.parse(localStorage.getItem("dati")) || [];
+
+function salva(){
+    let f = document.getElementById("frigo").value;
+    let t = document.getElementById("temp").value;
+
+    if(!f || !t){
+        alert("Compila tutto");
+        return;
+    }
+
+    let now = new Date().toLocaleString();
+
+    dati.push({frigo: f, temp: t, data: now});
+
+    localStorage.setItem("dati", JSON.stringify(dati));
+
+    aggiorna();
+}
+
+function aggiorna(){
+    let lista = document.getElementById("lista");
+    lista.innerHTML = "";
+
+    dati.forEach(d => {
+        lista.innerHTML += "<li>" + d.frigo + " - " + d.temp + "°C (" + d.data + ")</li>";
+    });
+}
+
+function esportaPDF(){
+    let testo = "Registro HACCP\n\n";
+
+    dati.forEach(d => {
+        testo += d.frigo + " - " + d.temp + "°C - " + d.data + "\n";
+    });
+
+    const blob = new Blob([testo], {type: "text/plain"});
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "haccp.txt";
+    link.click();
+}
+
+window.onload = aggiorna;
+</script>
+
+</body>
+</html>
